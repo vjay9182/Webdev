@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Expense Tracker</h1>
+    <div class="container">
+        <form id="expenseForm">
+            <label for="amount">Amount:</label>
+            <input type="number" id="amount" name="amount" required>
+            <label for="desc">Description:</label>
+            <input type="text" id="desc" name="desc" required>
+            <label for="category">Category:</label>
+            <select id="category" name="category">
+                <option value="movie">Movie</option>
+                <option value="food">Food</option>
+                <option value="petrol">Petrol</option>
+                <option value="rent">Rent</option>
+            </select>
+            <button type="submit">Add Expense</button>
+        </form>
+        <div id="expensesList"></div>
+        <p>Total Expenses: <span id="totalExpenses">0</span></p>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const expenseForm = document.getElementById('expenseForm');
+            const expensesList = document.getElementById('expensesList');
+            const totalExpenses = document.getElementById('totalExpenses');
+            let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            let editingIndex = -1;
+
+            function renderExpenses() {
+                expensesList.innerHTML = '';
+                let total = 0;
+                expenses.forEach(function(expense, index) {
+                    const div = document.createElement('div');
+                    div.innerHTML = `<strong>${expense.desc}</strong> (${expense.category}) - $${expense.amount}
+                        <button onclick="editExpense(${index})">Edit</button>
+                        <button onclick="deleteExpense(${index})">Delete</button>`;
+                    expensesList.appendChild(div);
+                    total += parseFloat(expense.amount);
+                });
+                totalExpenses.textContent = total.toFixed(2);
+            }
+
+            renderExpenses();
+
+            expenseForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const desc = document.getElementById('desc').value.trim();
+                const category = document.getElementById('category').value;
+                const amount = document.getElementById('amount').value.trim();
+                if (desc === '' || amount === '') {
+                    return;
+                }
+                const expense = {
+                    desc,
+                    category,
+                    amount
+                };
+                if (editingIndex > -1) {
+                    expenses[editingIndex] = expense;
+                    editingIndex = -1;
+                } else {
+                    expenses.push(expense);
+                }
+                localStorage.setItem('expenses', JSON.stringify(expenses));
+                renderExpenses();
+                expenseForm.reset();
+            });
+        });
+
+        function deleteExpense(index) {
+            let expenses = JSON.parse(localStorage.getItem('expenses'));
+            expenses.splice(index, 1);
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+            renderExpenses();
+        }
+
+        function editExpense(index) {
+            let expenses = JSON.parse(localStorage.getItem('expenses'));
+            document.getElementById('desc').value = expenses[index].desc;
+            document.getElementById('category').value = expenses[index].category;
+            document.getElementById('amount').value = expenses[index].amount;
+            editingIndex = index;
+        }
+    </script>
+
+</body>
+</html>
+
